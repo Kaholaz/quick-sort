@@ -101,23 +101,28 @@ def partition_dual(a: list, start: int, stop: int) -> tuple[int, int]:
     piv_1, piv_2 = start + 1, stop - 1
     value_1, value_2 = a[piv_1], a[piv_2]
 
-        
+    # Set the pointers
     lo = mid = piv_1 + 1
     hi = piv_2 - 1
     while mid <= hi:
+        # This value needs to go to the bottom third
         if a[mid] < value_1:
             a[mid], a[lo] = a[lo], a[mid]
             lo += 1
+        # This value needs to go to the upper third
         elif a[mid] >= value_2:
             while a[hi] > value_2 and hi > mid:
                 hi -= 1
             a[mid], a[hi] = a[hi], a[mid]
             hi -= 1
+
+            # The new value may need to be moved to the lower third
             if a[mid] < value_1:
                 a[mid], a[lo] = a[lo], a[mid]
                 lo += 1
         mid += 1
     
+    # Put the pivots into the correct places
     lo -= 1
     hi += 1
     a[lo], a[piv_1] = a[piv_1], a[lo]
