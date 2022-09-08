@@ -72,7 +72,7 @@ def partition_arunan(nums, low, high):
     min_index = low + 1
 
     for current_index in range(min_index, high - 1):
-        if nums[current_index] <= pivot:
+        if nums[current_index] < pivot:
             nums[min_index], nums[current_index] = nums[current_index], nums[min_index]
             min_index += 1
 
