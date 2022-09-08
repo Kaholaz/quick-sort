@@ -92,70 +92,38 @@ def median_four_sort(a: list, start: int, stop: int) -> tuple[int, int]:
 
 def partition_dual(a: list, start: int, stop: int) -> tuple[int, int]:
     piv_1, piv_2 = median_four_sort(a, start, stop)
-
+    
     # Put pivots at the start and end
     a[piv_1], a[start + 1] = a[start + 1], a[piv_1]
     a[piv_2], a[stop - 1] = a[stop - 1], a[piv_2]
-
+    
     # Update pivot indecies and retrive value
     piv_1, piv_2 = start + 1, stop - 1
     value_1, value_2 = a[piv_1], a[piv_2]
 
-    # Define left pointer and right pointer
-    left = [start + 2, start + 2]
-    right = [stop - 2, stop - 2]
-
-    found_left, found_right = False, False
-    while True:
-        while a[left[0]] < value_1: left[0] += 1
-        while a[left[1]] < value_2: left[1] += 1
-
-        while a[right[0]] > value_1: right[0] -= 1
-        while a[right[1]] > value_2: right[1] -= 1
-
-        if left[0] >= right[0]:
-            found_left = True
-        if left[1] >= right[1]:
-            found_right = True
-
-        # Everything execpt the pivots are sorted
-        if found_left and found_right:
-            break
         
-        # Swap wrong values
-        same_left = left[0] == left[1]
-        same_right = right[0] == right[1]
-        if same_left:
-            to_swap = found_left
-
-            a[left[0]], a[right[to_swap]] = a[right[to_swap]], a[left[0]]
-            left[1] += 1
-            right[to_swap] -= 1
-            continue
-        elif same_right:
-            to_swap = not found_right
-
-            a[left[to_swap]], a[right[0]] = a[right[0]], a[left[to_swap]]
-            left[to_swap] += 1
-            right[0] -= 1
-            continue
-        else:
-            if not found_left:
-                a[left[0]], a[right[0]] = a[right[0]], a[left[0]]
-                left[0] += 1
-                right[0] -= 1
-            if not found_right:
-                a[left[1]], a[right[1]] = a[right[1]], a[left[1]]
-                left[1] += 1
-                right[1] -= 1
-
- 
-    a[piv_1], a[right[0]] = a[right[0]], a[piv_1]
-    a[piv_2], a[left[1]] = a[left[1]], a[piv_2]
-
-    return right[0], left[1]
-
-
+    lo = mid = piv_1 + 1
+    hi = piv_2 - 1
+    while mid <= hi:
+        if a[mid] < value_1:
+            a[mid], a[lo] = a[lo], a[mid]
+            lo += 1
+        elif a[mid] >= value_2:
+            while a[hi] > value_2 and hi > mid:
+                hi -= 1
+            a[mid], a[hi] = a[hi], a[mid]
+            hi -= 1
+            if a[mid] < value_1:
+                a[mid], a[lo] = a[lo], a[mid]
+                lo += 1
+        mid += 1
+    
+    lo -= 1
+    hi += 1
+    a[lo], a[piv_1] = a[piv_1], a[lo]
+    a[hi], a[piv_2] = a[piv_2], a[hi]
+    return lo, hi
+            
 
 
 def quick_sort_insert_20(a: list):
@@ -235,7 +203,7 @@ if __name__=="__main__":
     from random import random
     from matplotlib import pyplot as plt
     from tqdm import tqdm
-    ns = [n for n in range(500, 50001, 500)]
+    ns = [n for n in range(2000, 100001, 2000)]
 
     timeings = {alg: list() for alg in sorting_algs}
     for n in tqdm(ns):
