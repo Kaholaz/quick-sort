@@ -203,40 +203,25 @@ def insertion_sort(a: list, start: int, end: int) -> list:
     return a
 
 sorting_algs = [sorted, quick_sort, quick_sort_dual, quick_sort_insert_20, arunan_sort]
-def test_sort_sorted():
-    a = [i for i in range(100)]
-    
-    results = [alg(a[:]) for alg in sorting_algs]
+
+def _test_sorting_algs_on_list(a: list, algs: list[callable]):
+    results = [alg(a[:]) for alg in algs]
 
     answer = sorted(a[:])
     assert all(answer == result for result in results)
+
+def test_sort_sorted():
+    _test_sorting_algs_on_list([n for n in range(100)], sorting_algs) 
 
 def test_sort_inverted():
-    a = [-i for i in range(100)]
-
-    results = [alg(a[:]) for alg in sorting_algs]
-
-    answer = sorted(a[:])
-    assert all(answer == result for result in results)
+    _test_sorting_algs_on_list([-n for n in range(100)], sorting_algs) 
 
 def test_sort_same():
-    a = [0 for _ in range(100)]
-
-    results = [alg(a[:]) for alg in sorting_algs]
-
-    answer = sorted(a[:])
-    assert all(answer == result for result in results)
-
+    _test_sorting_algs_on_list([0 for _ in range(100)], sorting_algs) 
 
 def test_sort_random():
-    from random import seed, random
-    seed(123)
-    a = [random() for _ in range(100)]
-
-    results = [alg(a[:]) for alg in sorting_algs]
-
-    answer = sorted(a[:])
-    assert all(answer == result for result in results)
+    from random import random
+    _test_sorting_algs_on_list([random() for _ in range(100)], sorting_algs) 
 
 if __name__=="__main__":
     from timeit import timeit
