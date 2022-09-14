@@ -1,31 +1,18 @@
-from functools import reduce
+import math
+from typing import Optional
+
 
 def quick_sort(a: list) -> list:
-    quick_sort_inner(a, 0, len(a) - 1)
-    return a
-
-
-def quick_sort_inner(a: list, start: int, stop: int) -> None:
-    if stop - start <= 2:
-        median_three_sort(a, start, stop)
-        return
-    
-    piv = partition(a, start, stop)
-    quick_sort_inner(a, start, piv - 1)
-    quick_sort_inner(a, piv + 1, stop)   
-
-def arunan_sort(a: list) -> list:
-    def inner(a: list, start, stop):
+    def inner(a: list, start: int, stop: int) -> None:
         if stop - start <= 2:
             median_three_sort(a, start, stop)
             return
-    
-        piv = partition_arunan(a, start, stop)
+        
+        piv = partition(a, start, stop)
         inner(a, start, piv - 1)
         inner(a, piv + 1, stop)   
     inner(a, 0, len(a) - 1)
     return a
-
 
 def median_three_sort(a: list, start: int, stop: int) -> int:
     mid = (start + stop) // 2
@@ -64,38 +51,20 @@ def partition(a: list, start: int, stop: int) -> int:
     a[piv], a[left] = a[left], a[piv]
     return left
 
-def partition_arunan(nums, low, high):
-    m = median_three_sort(nums, low, high)
-    nums[m], nums[high - 1] = nums[high - 1], nums[m]
-    pivot = nums[high - 1]
-
-    min_index = low + 1
-
-    for current_index in range(min_index, high - 1):
-        if nums[current_index] < pivot:
-            nums[min_index], nums[current_index] = nums[current_index], nums[min_index]
-            min_index += 1
-
-    nums[min_index], nums[high - 1] = nums[high - 1], nums[min_index]
-
-    return min_index
-
-
 def quick_sort_dual(a: list) -> list:
-    quick_sort_dual_inner(a, 0, len(a) - 1)
+    def inner(a: list, start: int, stop: int) -> None:
+        if start >= stop:
+            return
+        if stop - start <= 3:
+            median_four_sort(a, start, stop)
+            return
+    
+        piv_1, piv_2 = partition_dual(a, start, stop)
+        inner(a, start, piv_1 - 1)
+        inner(a, piv_1 + 1, piv_2 - 1)
+        inner(a, piv_2 + 1, stop)
+    inner(a, 0, len(a) - 1)
     return a
-    
-def quick_sort_dual_inner(a: list, start: int, stop: int) -> None:
-    if start >= stop:
-        return
-    if stop - start <= 3:
-        median_four_sort(a, start, stop)
-        return
-    
-    piv_1, piv_2 = partition_dual(a, start, stop)
-    quick_sort_dual_inner(a, start, piv_1 - 1)
-    quick_sort_dual_inner(a, piv_1 + 1, piv_2 - 1)
-    quick_sort_dual_inner(a, piv_2 + 1, stop)
 
 
 def median_four_sort(a: list, start: int, stop: int) -> tuple[int, int]:
@@ -202,13 +171,22 @@ def insertion_sort(a: list, start: int, end: int) -> list:
 
     return a
 
-sorting_algs = [sorted, quick_sort, quick_sort_dual, quick_sort_insert_20, arunan_sort]
+sorting_algs = [sorted, quick_sort, quick_sort_dual, quick_sort_insert_10, quick_sort_insert_20]
 
 def _test_sorting_algs_on_list(a: list, algs: list[callable]):
-    results = [alg(a[:]) for alg in algs]
+    def list_is_ascending(a: list) -> bool:
+        prev = a[0]
+        for item in a[1:]:
+            if item < prev:
+                return False
+            prev = item
+        return True
 
-    answer = sorted(a[:])
-    assert all(answer == result for result in results)
+    for alg in algs:
+        s = sum(a)
+        sorted_ = alg(a[:])
+        assert list_is_ascending(sorted_)
+        assert math.isclose(s, sum(sorted_)) # Rounded to avoid floating point inaccuracies
 
 def test_sort_sorted():
     _test_sorting_algs_on_list([n for n in range(100)], sorting_algs) 
@@ -221,28 +199,47 @@ def test_sort_same():
 
 def test_sort_random():
     from random import random
-    _test_sorting_algs_on_list([random() for _ in range(100)], sorting_algs) 
+    _test_sorting_algs_on_list([random() for _ in range(100)], sorting_algs)
+
+def sort_list_with_algs(a: list, sorting_algs: list[callable], samples: int, desc: Optional[str] = None) -> dict[callable, list[float]]:
+    timeings = {alg: list() for alg in sorting_algs}
+
+    n_stop = len(a) + 1
+    n_start = n_step = (n_stop - 1) // samples
+    ns = [n for n in range(n_start, n_stop, n_step)]
+    for n in tqdm(ns, desc=desc):
+        for func in timeings.keys():
+            timeings[func].append(timeit("func(nums)", setup="nums=a[:n]", number=1, globals=vars()))
+    return timeings, ns
+
+from matplotlib.axes import Axes
+def plot_timings_on_axes(timeings: dict[callable, list[float]], ns: list[int], axes: Axes, title: Optional[str] = None):
+    axes.set_ylabel("Tidsforbruk (ms pr. iterasjon)")
+    axes.set_xlabel("Antall tall som blir sortert")
+    for times in timeings.values():
+        axes.plot(ns, times)
+
+    if title is not None: axes.set_title(title)
+    axes.legend([func.__name__ for func in timeings.keys()], loc=0, frameon=True)
+
+def sort_and_plot(a: list, sorting_algs: list[callable], axes: Axes, samples: int = 50, title: Optional[str] = None) -> None:
+    timeings, ns = sort_list_with_algs(a, sorting_algs, samples, title)
+    plot_timings_on_axes(timeings, ns, axes, title)
+    
+
 
 if __name__=="__main__":
     from timeit import timeit
     from random import random
-    from matplotlib import pyplot as plt
-    from tqdm import tqdm
-    ns = [n for n in range(2000, 100001, 2000)]
+    from matplotlib import pyplot as plt # For plotting
+    from tqdm import tqdm # For loading bar
 
-    timeings = {alg: list() for alg in sorting_algs}
-    for n in tqdm(ns):
-        original_nums = [random() for n in range(n)]
+    max_size = 100000
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
 
-        for func in timeings.keys():
-            timeings[func].append(timeit("func(nums)", setup="nums=original_nums[:]", number=1, globals=vars()))
-    
+    sort_and_plot([random() for _ in range(max_size)], sorting_algs, ax1, title="Random values")
+    sort_and_plot([0 for _ in range(max_size)], sorting_algs, ax2, title="Same value")
+    sort_and_plot([i for i in range(max_size)], sorting_algs, ax3, title="Already sorted")
+    sort_and_plot([-i for i in range(max_size)], sorting_algs, ax4, title="Descending order")
 
-    plt.ylabel("Tidsforbruk (ms pr. iterasjon)")
-    plt.xlabel("Antall tall som blir sortert")
-
-    for func, times in timeings.items():
-        plt.plot(ns, times)
-    plt.legend([func.__name__ for func in timeings.keys()], loc=0, frameon=True)
     plt.show()
-            
