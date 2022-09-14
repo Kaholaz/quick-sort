@@ -137,7 +137,7 @@ def partition_dual(a: list, start: int, stop: int) -> tuple[int, int]:
 
 def quick_sort_insert_20(a: list):
     def inner(a: list, start: int, stop: int):
-        if stop - start <= 20:
+        if stop - start < 20:
             insertion_sort(a, start, stop)
             return
     
@@ -151,7 +151,7 @@ def quick_sort_insert_20(a: list):
 
 def quick_sort_insert_10(a: list):
     def inner(a: list, start: int, stop: int):
-        if stop - start <= 10:
+        if stop - start < 10:
             insertion_sort(a, start, stop)
             return
     
@@ -201,15 +201,24 @@ def test_sort_random():
     from random import random
     _test_sorting_algs_on_list([random() for _ in range(100)], sorting_algs)
 
-def sort_list_with_algs(a: list, sorting_algs: list[callable], samples: int, desc: Optional[str] = None) -> dict[callable, list[float]]:
+def sort_list_with_algs(a: list, sorting_algs: list[callable], samples: int, desc: Optional[str] = None, use_loading_bar=False) -> dict[callable, list[float]]:
     timeings = {alg: list() for alg in sorting_algs}
 
     n_stop = len(a) + 1
-    n_start = n_step = (n_stop - 1) // samples
+    n_start = n_step = len(a) // samples
     ns = [n for n in range(n_start, n_stop, n_step)]
-    for n in tqdm(ns, desc=desc):
+    
+    if use_loading_bar:
+        from tqdm import tqdm
+        ns = tqdm(ns, desc=desc)
+
+    for n in ns:
         for func in timeings.keys():
-            timeings[func].append(timeit("func(nums)", setup="nums=a[:n]", number=1, globals=vars()))
+            timeings[func].append(timeit("func(nums)", setup="nums=a[:n]", number=10, globals=vars()))
+    
+    if use_loading_bar:
+        ns = ns.iterable
+
     return timeings, ns
 
 from matplotlib.axes import Axes
@@ -223,7 +232,7 @@ def plot_timings_on_axes(timeings: dict[callable, list[float]], ns: list[int], a
     axes.legend([func.__name__ for func in timeings.keys()], loc=0, frameon=True)
 
 def sort_and_plot(a: list, sorting_algs: list[callable], axes: Axes, samples: int = 50, title: Optional[str] = None) -> None:
-    timeings, ns = sort_list_with_algs(a, sorting_algs, samples, title)
+    timeings, ns = sort_list_with_algs(a, sorting_algs, samples, title, use_loading_bar=True)
     plot_timings_on_axes(timeings, ns, axes, title)
     
 
@@ -232,7 +241,6 @@ if __name__=="__main__":
     from timeit import timeit
     from random import random
     from matplotlib import pyplot as plt # For plotting
-    from tqdm import tqdm # For loading bar
 
     max_size = 100000
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
