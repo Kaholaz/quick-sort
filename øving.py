@@ -200,54 +200,65 @@ def test_sort_same():
 def test_sort_random():
     from random import random
     _test_sorting_algs_on_list([random() for _ in range(100)], sorting_algs)
-
-def sort_list_with_algs(a: list, sorting_algs: list[callable], samples: int, desc: Optional[str] = None, use_loading_bar=False) -> dict[callable, list[float]]:
-    timeings = {alg: list() for alg in sorting_algs}
-
-    n_stop = len(a) + 1
-    n_start = n_step = len(a) // samples
-    ns = [n for n in range(n_start, n_stop, n_step)]
     
-    if use_loading_bar:
-        from tqdm import tqdm
-        ns = tqdm(ns, desc=desc)
-
-    for n in ns:
-        for func in timeings.keys():
-            timeings[func].append(timeit("func(nums)", setup="nums=a[:n]", number=10, globals=vars()))
-    
-    if use_loading_bar:
-        ns = ns.iterable
-
-    return timeings, ns
-
-from matplotlib.axes import Axes
-def plot_timings_on_axes(timeings: dict[callable, list[float]], ns: list[int], axes: Axes, title: Optional[str] = None):
-    axes.set_ylabel("Tidsforbruk (ms pr. iterasjon)")
-    axes.set_xlabel("Antall tall som blir sortert")
-    for times in timeings.values():
-        axes.plot(ns, times)
-
-    if title is not None: axes.set_title(title)
-    axes.legend([func.__name__ for func in timeings.keys()], loc=0, frameon=True)
-
-def sort_and_plot(a: list, sorting_algs: list[callable], axes: Axes, samples: int = 50, title: Optional[str] = None) -> None:
-    timeings, ns = sort_list_with_algs(a, sorting_algs, samples, title, use_loading_bar=True)
-    plot_timings_on_axes(timeings, ns, axes, title)
-    
+# Run tests
+if __name__ == "__main__":
+    variables = vars().copy()
+    for name, value in variables.items():
+        if name.startswith("test_"):
+            try:
+                value()
+                print(f"The test '{name}' ran sucsessfully!")
+            except AssertionError:
+                print(f"The test '{name}' failed!")
 
 
-if __name__=="__main__":
-    from timeit import timeit
-    from random import random
-    from matplotlib import pyplot as plt # For plotting
-
-    max_size = 100000
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-
-    sort_and_plot([random() for _ in range(max_size)], sorting_algs, ax1, title="Random values")
-    sort_and_plot([0 for _ in range(max_size)], sorting_algs, ax2, title="Same value")
-    sort_and_plot([i for i in range(max_size)], sorting_algs, ax3, title="Already sorted")
-    sort_and_plot([-i for i in range(max_size)], sorting_algs, ax4, title="Descending order")
-
-    plt.show()
+# Do experiment
+#def sort_list_with_algs(a: list, sorting_algs: list[callable], samples: int, desc: Optional[str] = None, use_loading_bar=False) -> dict[callable, list[float]]:
+#    timeings = {alg: list() for alg in sorting_algs}
+#
+#    n_stop = len(a) + 1
+#    n_start = n_step = len(a) // samples
+#    ns = [n for n in range(n_start, n_stop, n_step)]
+#    
+#    if use_loading_bar:
+#        from tqdm import tqdm
+#        ns = tqdm(ns, desc=desc)
+#
+#    for n in ns:
+#        for func in timeings.keys():
+#            timeings[func].append(timeit("func(nums)", setup="nums=a[:n]", number=1, globals=vars()))
+#    
+#    if use_loading_bar:
+#        ns = ns.iterable
+#
+#    return timeings, ns
+#
+#from matplotlib.axes import Axes
+#def plot_timings_on_axes(timeings: dict[callable, list[float]], ns: list[int], axes: Axes, title: Optional[str] = None):
+#    axes.set_ylabel("Tidsforbruk (ms pr. iterasjon)")
+#    axes.set_xlabel("Antall tall som blir sortert")
+#    for times in timeings.values():
+#        axes.plot(ns, times)
+#
+#    if title is not None: axes.set_title(title)
+#    axes.legend([func.__name__ for func in timeings.keys()], loc=0, frameon=True)
+#
+#def sort_and_plot(a: list, sorting_algs: list[callable], axes: Axes, samples: int = 50, title: Optional[str] = None) -> None:
+#    timeings, ns = sort_list_with_algs(a, sorting_algs, samples, title, use_loading_bar=True)
+#    plot_timings_on_axes(timeings, ns, axes, title)
+#
+#if __name__=="__main__":
+#    from timeit import timeit
+#    from random import random
+#    from matplotlib import pyplot as plt # For plotting
+#
+#    max_size = 100000
+#    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+#
+#    sort_and_plot([random() for _ in range(max_size)], sorting_algs, ax1, title="Random values")
+#    sort_and_plot([0 for _ in range(max_size)], sorting_algs, ax2, title="Same value")
+#    sort_and_plot([i for i in range(max_size)], sorting_algs, ax3, title="Already sorted")
+#    sort_and_plot([-i for i in range(max_size)], sorting_algs, ax4, title="Descending order")
+#
+#    plt.show()
